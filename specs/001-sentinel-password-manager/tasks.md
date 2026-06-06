@@ -26,11 +26,11 @@ description: "Task list for Sentinel - Local Password Manager implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 [P] Create package structure in app/src/main/java/com/rushi/sentinel/
-- [ ] T002 Update build.gradle.kts with SQLCipher, Hilt, Room, and DataStore dependencies
-- [ ] T003 [P] Configure Hilt SentinelApp and DatabaseModule in app/src/main/java/com/rushi/sentinel/di/
-- [ ] T004 [P] Create MD2 Theme and Color scheme in app/src/main/java/com/rushi/sentinel/ui/theme/
-- [ ] T005 [P] Implement FLAG_SECURE and status bar config in MainActivity.kt
+- [x] T001 [P] Create package structure in app/src/main/java/com/rushi/sentinel/
+- [x] T002 Update build.gradle.kts with SQLCipher, Hilt, Room, and DataStore dependencies
+- [x] T003 [P] Configure Hilt SentinelApp and DatabaseModule in app/src/main/java/com/rushi/sentinel/di/
+- [x] T004 [P] Create MD2 Theme and Color scheme in app/src/main/java/com/rushi/sentinel/ui/theme/
+- [x] T005 [P] Implement FLAG_SECURE and status bar config in MainActivity.kt
 
 ---
 
