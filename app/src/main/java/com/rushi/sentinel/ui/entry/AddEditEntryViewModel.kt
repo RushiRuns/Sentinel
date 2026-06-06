@@ -8,13 +8,16 @@ import androidx.lifecycle.viewModelScope
 import com.rushi.sentinel.data.repository.VaultRepository
 import com.rushi.sentinel.domain.model.Entry
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.rushi.sentinel.domain.model.Category
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,6 +25,13 @@ import javax.inject.Inject
 class AddEditEntryViewModel @Inject constructor(
     private val vaultRepository: VaultRepository
 ) : ViewModel() {
+
+    val categories: StateFlow<List<Category>> = vaultRepository.getCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -39,6 +49,7 @@ class AddEditEntryViewModel @Inject constructor(
     var url by mutableStateOf("")
     var notes by mutableStateOf("")
     var isFavorite by mutableStateOf(false)
+    var categoryId by mutableStateOf<Long?>(null)
 
     private var entryId: Long? = null
     private var createdAt: Long = 0L
@@ -52,6 +63,7 @@ class AddEditEntryViewModel @Inject constructor(
             url = ""
             notes = ""
             isFavorite = false
+            categoryId = null
             createdAt = 0L
             _error.value = null
         } else {
@@ -66,6 +78,7 @@ class AddEditEntryViewModel @Inject constructor(
                     url = entry.url ?: ""
                     notes = entry.notes ?: ""
                     isFavorite = entry.isFavorite
+                    categoryId = entry.categoryId
                     createdAt = entry.createdAt
                 } else {
                     _error.value = "Failed to load entry for editing"
@@ -97,7 +110,7 @@ class AddEditEntryViewModel @Inject constructor(
                     password = pwdBytes,
                     url = url.trim(),
                     notes = notes.trim(),
-                    categoryId = null,
+                    categoryId = categoryId,
                     isFavorite = isFavorite,
                     createdAt = if (createdAt == 0L) now else createdAt,
                     updatedAt = now,

@@ -4,6 +4,7 @@ import com.rushi.sentinel.crypto.KeyDerivation
 import com.rushi.sentinel.data.datastore.SettingsDataStore
 import com.rushi.sentinel.data.db.DatabaseHolder
 import com.rushi.sentinel.data.db.entity.EntryEntity
+import com.rushi.sentinel.data.db.entity.CategoryEntity
 import com.rushi.sentinel.domain.model.Category
 import com.rushi.sentinel.domain.model.Entry
 import com.rushi.sentinel.ui.navigation.VaultLockState
@@ -59,11 +60,21 @@ class VaultRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getCategories(): Flow<List<Category>> = flowOf(emptyList())
+    override fun getCategories(): Flow<List<Category>> {
+        return databaseHolder.getDatabase().categoryDao().getCategories().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
 
-    override suspend fun insertCategory(category: Category) {}
+    override suspend fun insertCategory(category: Category) = withContext(ioDispatcher) {
+        databaseHolder.getDatabase().categoryDao().insertCategory(category.toEntity())
+        Unit
+    }
 
-    override suspend fun deleteCategory(category: Category) {}
+    override suspend fun deleteCategory(category: Category) = withContext(ioDispatcher) {
+        databaseHolder.getDatabase().categoryDao().deleteCategory(category.toEntity())
+        Unit
+    }
 
     override suspend fun unlock(password: CharArray): Result<Unit> = withContext(ioDispatcher) {
         try {
@@ -106,6 +117,18 @@ class VaultRepositoryImpl @Inject constructor(
     }
 
     // Mapper helper extensions
+    private fun CategoryEntity.toDomain(): Category = Category(
+        id = id,
+        name = name,
+        createdAt = createdAt
+    )
+
+    private fun Category.toEntity(): CategoryEntity = CategoryEntity(
+        id = id,
+        name = name,
+        createdAt = createdAt
+    )
+
     private fun EntryEntity.toDomain(): Entry = Entry(
         id = id,
         name = name,

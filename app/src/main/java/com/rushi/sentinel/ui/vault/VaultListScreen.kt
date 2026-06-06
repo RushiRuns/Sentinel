@@ -1,7 +1,10 @@
 package com.rushi.sentinel.ui.vault
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +32,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -55,11 +59,14 @@ fun VaultListScreen(
     viewModel: VaultListViewModel,
     onEntryClick: (Long) -> Unit,
     onAddEntryClick: () -> Unit,
+    onManageCategoriesClick: () -> Unit,
     onCopyPassword: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val entries by viewModel.entries.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
 
     Scaffold(
         topBar = {
@@ -132,6 +139,38 @@ fun VaultListScreen(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Categories horizontal list
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // "All" Chip
+                CategoryFilterChip(
+                    name = "All",
+                    isSelected = selectedCategoryId == null,
+                    onClick = { viewModel.selectCategory(null) }
+                )
+
+                // Dynamic Categories Chips
+                categories.forEach { category ->
+                    CategoryFilterChip(
+                        name = category.name,
+                        isSelected = selectedCategoryId == category.id,
+                        onClick = { viewModel.selectCategory(category.id) }
+                    )
+                }
+
+                // Manage Chip
+                ManageCategoriesChip(
+                    onClick = onManageCategoriesClick
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -260,5 +299,68 @@ fun EntryCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun CategoryFilterChip(
+    name: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .background(
+                color = if (isSelected) PrimaryTeal else SlateSurface,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = name,
+            color = if (isSelected) DeepBackground else TextPrimary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun ManageCategoriesChip(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .background(
+                color = Color.Transparent,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = AccentCyan.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Folder,
+            contentDescription = null,
+            tint = AccentCyan,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "Manage",
+            color = AccentCyan,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }

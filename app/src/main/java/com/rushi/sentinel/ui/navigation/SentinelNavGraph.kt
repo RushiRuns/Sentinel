@@ -16,9 +16,12 @@ import com.rushi.sentinel.ui.lock.LockScreen
 import com.rushi.sentinel.ui.lock.LockViewModel
 import com.rushi.sentinel.ui.vault.VaultListScreen
 import com.rushi.sentinel.ui.vault.VaultListViewModel
+import com.rushi.sentinel.ui.categories.CategoriesScreen
+import com.rushi.sentinel.ui.categories.CategoriesViewModel
 
 sealed class MainScreen {
     object VaultList : MainScreen()
+    object Categories : MainScreen()
     data class EntryDetail(val entryId: Long) : MainScreen()
     data class AddEditEntry(val entryId: Long?) : MainScreen()
 }
@@ -44,6 +47,7 @@ fun SentinelNavGraph(
         val vaultListViewModel: VaultListViewModel = hiltViewModel()
         val entryDetailViewModel: EntryDetailViewModel = hiltViewModel()
         val addEditEntryViewModel: AddEditEntryViewModel = hiltViewModel()
+        val categoriesViewModel: CategoriesViewModel = hiltViewModel()
 
         when (val screen = currentScreen) {
             is MainScreen.VaultList -> {
@@ -55,7 +59,18 @@ fun SentinelNavGraph(
                     onAddEntryClick = {
                         currentScreen = MainScreen.AddEditEntry(null)
                     },
+                    onManageCategoriesClick = {
+                        currentScreen = MainScreen.Categories
+                    },
                     onCopyPassword = onCopyPassword
+                )
+            }
+            is MainScreen.Categories -> {
+                CategoriesScreen(
+                    viewModel = categoriesViewModel,
+                    onBack = {
+                        currentScreen = MainScreen.VaultList
+                    }
                 )
             }
             is MainScreen.EntryDetail -> {

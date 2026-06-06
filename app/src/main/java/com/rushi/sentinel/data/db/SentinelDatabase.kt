@@ -6,6 +6,7 @@ import com.rushi.sentinel.data.db.entity.CategoryEntity
 import com.rushi.sentinel.data.db.entity.EntryEntity
 
 import com.rushi.sentinel.data.db.dao.EntryDao
+import com.rushi.sentinel.data.db.dao.CategoryDao
 
 @Database(
     entities = [EntryEntity::class, CategoryEntity::class],
@@ -14,4 +15,5 @@ import com.rushi.sentinel.data.db.dao.EntryDao
 )
 abstract class SentinelDatabase : RoomDatabase() {
     abstract fun entryDao(): EntryDao
+    abstract fun categoryDao(): CategoryDao
 }

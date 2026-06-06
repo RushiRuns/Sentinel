@@ -3,6 +3,7 @@ package com.rushi.sentinel.ui.entry
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.graphics.Color
@@ -26,6 +27,8 @@ import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -38,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
@@ -279,6 +283,87 @@ fun AddEditEntryScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
+                    }
+                }
+
+                // Category Selection Card
+                var isDropdownExpanded by remember { mutableStateOf(false) }
+                val categories by viewModel.categories.collectAsState()
+                val selectedCategory = categories.find { it.id == viewModel.categoryId }
+
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    backgroundColor = SlateSurface,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Category",
+                            color = AccentCyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(DeepBackground, RoundedCornerShape(8.dp))
+                                    .border(
+                                        width = 1.dp,
+                                        color = TextSecondary.copy(alpha = 0.3f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { isDropdownExpanded = true }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedCategory?.name ?: "None",
+                                    color = TextPrimary,
+                                    fontSize = 16.sp
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.Folder,
+                                    contentDescription = "Select Category",
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = isDropdownExpanded,
+                                onDismissRequest = { isDropdownExpanded = false },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .background(SlateSurface)
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        viewModel.categoryId = null
+                                        isDropdownExpanded = false
+                                    }
+                                ) {
+                                    Text("None", color = TextPrimary)
+                                }
+                                categories.forEach { category ->
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            viewModel.categoryId = category.id
+                                            isDropdownExpanded = false
+                                        }
+                                    ) {
+                                        Text(category.name, color = TextPrimary)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
