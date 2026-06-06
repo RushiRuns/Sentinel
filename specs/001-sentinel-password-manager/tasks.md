@@ -40,13 +40,13 @@ description: "Task list for Sentinel - Local Password Manager implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Implement PBKDF2 key derivation in app/src/main/java/com/rushi/sentinel/crypto/KeyDerivation.kt
-- [ ] T007 [P] Create unit test for KeyDerivation in app/src/test/java/com/rushi/sentinel/crypto/KeyDerivationTest.kt
-- [ ] T008 [P] Define EntryEntity and CategoryEntity in app/src/main/java/com/rushi/sentinel/data/db/entity/
-- [ ] T009 Create SentinelDatabase with SQLCipher SupportFactory in app/src/main/java/com/rushi/sentinel/data/db/
-- [ ] T010 [P] Implement SettingsDataStore for salt and settings in app/src/main/java/com/rushi/sentinel/data/datastore/
-- [ ] T011 Create VaultLockState singleton for global lock management in app/src/main/java/com/rushi/sentinel/ui/navigation/
-- [ ] T012 Setup SentinelNavGraph with Lock/Main split in app/src/main/java/com/rushi/sentinel/ui/navigation/
+- [x] T006 Implement PBKDF2 key derivation in app/src/main/java/com/rushi/sentinel/crypto/KeyDerivation.kt
+- [x] T007 [P] Create unit test for KeyDerivation in app/src/test/java/com/rushi/sentinel/crypto/KeyDerivationTest.kt
+- [x] T008 [P] Define EntryEntity and CategoryEntity in app/src/main/java/com/rushi/sentinel/data/db/entity/
+- [x] T009 Create SentinelDatabase with SQLCipher SupportFactory in app/src/main/java/com/rushi/sentinel/data/db/
+- [x] T010 [P] Implement SettingsDataStore for salt and settings in app/src/main/java/com/rushi/sentinel/data/datastore/
+- [x] T011 Create VaultLockState singleton for global lock management in app/src/main/java/com/rushi/sentinel/ui/navigation/
+- [x] T012 Setup SentinelNavGraph with Lock/Main split in app/src/main/java/com/rushi/sentinel/ui/navigation/
 
 **Checkpoint**: Foundation ready - database encryption and navigation structure are in place.
 
