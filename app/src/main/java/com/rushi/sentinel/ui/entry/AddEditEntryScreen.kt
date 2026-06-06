@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -30,6 +31,13 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
+import androidx.compose.material.TextButton
+import androidx.compose.ui.text.font.FontFamily
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.rushi.sentinel.ui.generator.GeneratorControls
+import com.rushi.sentinel.ui.generator.PasswordStrengthIndicator
+import com.rushi.sentinel.ui.generator.GeneratorViewModel
+import com.rushi.sentinel.ui.generator.PasswordStrength
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -78,6 +86,7 @@ fun AddEditEntryScreen(
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var showGeneratorDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(entryId) {
         viewModel.loadEntry(entryId)
@@ -240,8 +249,7 @@ fun AddEditEntryScreen(
                         // Quick generator helper button
                         Button(
                             onClick = {
-                                viewModel.password = generateSecurePassword()
-                                isPasswordVisible = true
+                                showGeneratorDialog = true
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -462,16 +470,111 @@ fun AddEditEntryScreen(
                 }
             }
         }
+
+        if (showGeneratorDialog) {
+            GeneratorDialog(
+                onDismiss = { showGeneratorDialog = false },
+                onUsePassword = { pwd ->
+                    viewModel.password = pwd
+                    isPasswordVisible = true
+                    showGeneratorDialog = false
+                }
+            )
+        }
     }
 }
 
-// 16-character secure random password generator helper
-private fun generateSecurePassword(): String {
-    val charPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*-_=+"
-    val random = SecureRandom()
-    val bytes = ByteArray(16)
-    random.nextBytes(bytes)
-    return (0 until 16).map {
-        charPool[(random.nextInt(charPool.length))]
-    }.joinToString("")
+@Composable
+fun GeneratorDialog(
+    onDismiss: () -> Unit,
+    onUsePassword: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val viewModel: GeneratorViewModel = hiltViewModel()
+    val password by viewModel.password.collectAsState()
+    val length by viewModel.length.collectAsState()
+    val includeUppercase by viewModel.includeUppercase.collectAsState()
+    val includeLowercase by viewModel.includeLowercase.collectAsState()
+    val includeNumbers by viewModel.includeNumbers.collectAsState()
+    val includeSymbols by viewModel.includeSymbols.collectAsState()
+    val strength by viewModel.strength.collectAsState()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Secure Password Generator",
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Generated Password Box
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(DeepBackground, RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = password,
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { viewModel.generatePassword() }) {
+                        Icon(
+                            imageVector = Icons.Default.Autorenew,
+                            contentDescription = "Regenerate",
+                            tint = AccentCyan,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                // Strength Meter
+                PasswordStrengthIndicator(strength = strength)
+
+                // Controls
+                GeneratorControls(
+                    length = length,
+                    includeUppercase = includeUppercase,
+                    includeLowercase = includeLowercase,
+                    includeNumbers = includeNumbers,
+                    includeSymbols = includeSymbols,
+                    onLengthChange = { viewModel.setLength(it) },
+                    onToggleUppercase = { viewModel.toggleUppercase() },
+                    onToggleLowercase = { viewModel.toggleLowercase() },
+                    onToggleNumbers = { viewModel.toggleNumbers() },
+                    onToggleSymbols = { viewModel.toggleSymbols() }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onUsePassword(password) }
+            ) {
+                Text("USE PASSWORD", color = PrimaryTeal, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CANCEL", color = TextPrimary)
+            }
+        },
+        backgroundColor = SlateSurface,
+        contentColor = TextPrimary,
+        shape = RoundedCornerShape(12.dp)
+    )
 }

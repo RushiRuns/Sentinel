@@ -18,10 +18,13 @@ import com.rushi.sentinel.ui.vault.VaultListScreen
 import com.rushi.sentinel.ui.vault.VaultListViewModel
 import com.rushi.sentinel.ui.categories.CategoriesScreen
 import com.rushi.sentinel.ui.categories.CategoriesViewModel
+import com.rushi.sentinel.ui.generator.GeneratorScreen
+import com.rushi.sentinel.ui.generator.GeneratorViewModel
 
 sealed class MainScreen {
     object VaultList : MainScreen()
     object Categories : MainScreen()
+    object PasswordGenerator : MainScreen()
     data class EntryDetail(val entryId: Long) : MainScreen()
     data class AddEditEntry(val entryId: Long?) : MainScreen()
 }
@@ -48,6 +51,7 @@ fun SentinelNavGraph(
         val entryDetailViewModel: EntryDetailViewModel = hiltViewModel()
         val addEditEntryViewModel: AddEditEntryViewModel = hiltViewModel()
         val categoriesViewModel: CategoriesViewModel = hiltViewModel()
+        val generatorViewModel: GeneratorViewModel = hiltViewModel()
 
         when (val screen = currentScreen) {
             is MainScreen.VaultList -> {
@@ -62,6 +66,9 @@ fun SentinelNavGraph(
                     onManageCategoriesClick = {
                         currentScreen = MainScreen.Categories
                     },
+                    onGeneratorClick = {
+                        currentScreen = MainScreen.PasswordGenerator
+                    },
                     onCopyPassword = onCopyPassword
                 )
             }
@@ -71,6 +78,15 @@ fun SentinelNavGraph(
                     onBack = {
                         currentScreen = MainScreen.VaultList
                     }
+                )
+            }
+            is MainScreen.PasswordGenerator -> {
+                GeneratorScreen(
+                    viewModel = generatorViewModel,
+                    onBack = {
+                        currentScreen = MainScreen.VaultList
+                    },
+                    onCopyPassword = onCopyPassword
                 )
             }
             is MainScreen.EntryDetail -> {
