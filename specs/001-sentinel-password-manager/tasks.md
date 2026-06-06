@@ -60,15 +60,15 @@ description: "Task list for Sentinel - Local Password Manager implementation"
 
 ### Tests for User Story 1 (MANDATORY) ⚠️
 
-- [ ] T013 [P] [US1] Unit test for VaultRepository.unlock flow in app/src/test/java/com/rushi/sentinel/data/repository/
-- [ ] T014 [P] [US1] UI test for LockScreen password entry in app/src/androidTest/java/com/rushi/sentinel/ui/lock/
+- [x] T013 [P] [US1] Unit test for VaultRepository.unlock flow in app/src/test/java/com/rushi/sentinel/data/repository/
+- [x] T014 [P] [US1] UI test for LockScreen password entry in app/src/androidTest/java/com/rushi/sentinel/ui/lock/
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Implement VaultRepository.unlock logic in app/src/main/java/com/rushi/sentinel/data/repository/
-- [ ] T016 [P] [US1] Create LockViewModel with failed attempt delay logic in app/src/main/java/com/rushi/sentinel/ui/lock/
-- [ ] T017 [US1] Implement LockScreen UI in app/src/main/java/com/rushi/sentinel/ui/lock/
-- [ ] T018 [US1] Wire ProcessLifecycleOwner in MainActivity for auto-lock on background
+- [x] T015 [P] [US1] Implement VaultRepository.unlock logic in app/src/main/java/com/rushi/sentinel/data/repository/
+- [x] T016 [P] [US1] Create LockViewModel with failed attempt delay logic in app/src/main/java/com/rushi/sentinel/ui/lock/
+- [x] T017 [US1] Implement LockScreen UI in app/src/main/java/com/rushi/sentinel/ui/lock/
+- [x] T018 [US1] Wire ProcessLifecycleOwner in MainActivity for auto-lock on background
 
 **Checkpoint**: User Story 1 complete. App is secure and can be unlocked.
 
