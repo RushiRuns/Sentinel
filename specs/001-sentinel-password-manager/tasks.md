@@ -82,16 +82,16 @@ description: "Task list for Sentinel - Local Password Manager implementation"
 
 ### Tests for User Story 2 (MANDATORY) ⚠️
 
-- [ ] T019 [P] [US2] Unit test for clipboard auto-clear timer in app/src/test/java/com/rushi/sentinel/ui/
-- [ ] T020 [P] [US2] Unit test for Entry detail masking/unmasking logic
+- [x] T019 [P] [US2] Unit test for clipboard auto-clear timer in app/src/test/java/com/rushi/sentinel/ui/
+- [x] T020 [P] [US2] Unit test for Entry detail masking/unmasking logic
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Implement EntryDao with CRUD operations in app/src/main/java/com/rushi/sentinel/data/db/dao/
-- [ ] T022 [US2] Create AddEditEntryScreen and ViewModel in app/src/main/java/com/rushi/sentinel/ui/entry/
-- [ ] T023 [US2] Create VaultListScreen and ViewModel in app/src/main/java/com/rushi/sentinel/ui/vault/
-- [ ] T024 [US2] Create EntryDetailScreen and ViewModel with masking/timer logic
-- [ ] T025 [US2] Implement clipboard copy with Handler-based auto-clear in app/src/main/java/com/rushi/sentinel/ui/MainActivity.kt
+- [x] T021 [P] [US2] Implement EntryDao with CRUD operations in app/src/main/java/com/rushi/sentinel/data/db/dao/
+- [x] T022 [US2] Create AddEditEntryScreen and ViewModel in app/src/main/java/com/rushi/sentinel/ui/entry/
+- [x] T023 [US2] Create VaultListScreen and ViewModel in app/src/main/java/com/rushi/sentinel/ui/vault/
+- [x] T024 [US2] Create EntryDetailScreen and ViewModel with masking/timer logic
+- [x] T025 [US2] Implement clipboard copy with Handler-based auto-clear in app/src/main/java/com/rushi/sentinel/ui/MainActivity.kt
 
 **Checkpoint**: Core password management functionality is operational.
 
