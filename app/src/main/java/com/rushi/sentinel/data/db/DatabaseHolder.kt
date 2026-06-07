@@ -28,6 +28,7 @@ class DatabaseHolder @Inject constructor(
     @Synchronized
     fun openDatabase(passphrase: ByteArray) {
         if (database == null) {
+            android.util.Log.d("DatabaseHolder", "Opening database...")
             // Clone the passphrase to prevent external modification (e.g. zeroing)
             // affecting the database factory.
             val passphraseClone = passphrase.clone()
@@ -41,6 +42,8 @@ class DatabaseHolder @Inject constructor(
             .openHelperFactory(factory)
             .fallbackToDestructiveMigration()
             .build()
+        } else {
+            android.util.Log.d("DatabaseHolder", "Database already opened.")
         }
     }
 
@@ -49,6 +52,7 @@ class DatabaseHolder @Inject constructor(
      */
     @Synchronized
     fun closeDatabase() {
+        android.util.Log.d("DatabaseHolder", "Closing database...")
         database?.close()
         database = null
         // Wipe the cloned passphrase from memory
@@ -62,5 +66,12 @@ class DatabaseHolder @Inject constructor(
     @Synchronized
     fun isOpened(): Boolean {
         return database != null
+    }
+
+    /**
+     * Returns the File object pointing to the database file.
+     */
+    fun getDatabaseFile(): java.io.File {
+        return context.getDatabasePath("sentinel.db")
     }
 }

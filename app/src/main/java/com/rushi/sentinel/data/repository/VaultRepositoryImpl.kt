@@ -120,10 +120,19 @@ class VaultRepositoryImpl @Inject constructor(
     override suspend fun unlock(password: CharArray): Result<Unit> = withContext(ioDispatcher) {
         try {
             var salt = settingsDataStore.saltFlow.first()
+            val dbFile = databaseHolder.getDatabaseFile()
+
             if (salt == null) {
-                // First launch: generate and save a secure 16-byte salt
+                if (dbFile.exists() && dbFile.length() > 0) {
+                    // Database exists but salt is missing — stale unencrypted DB from a pre-SQLCipher
+                    // install. Wipe it so the user can start fresh.
+                    android.util.Log.w("VaultRepository", "Stale DB with no salt — deleting incompatible file.")
+                    dbFile.delete()
+                }
+                // First launch (or after wipe): generate and save a secure 16-byte salt.
                 salt = ByteArray(16).apply { SecureRandom().nextBytes(this) }
                 settingsDataStore.saveSalt(salt)
+                android.util.Log.d("VaultRepository", "Generated new salt for first launch.")
             }
 
             val derivedKey = KeyDerivation.deriveKey(password, salt)
@@ -132,9 +141,26 @@ class VaultRepositoryImpl @Inject constructor(
                 // Access writableDatabase to force validation of encryption key / DB creation
                 databaseHolder.getDatabase().openHelper.writableDatabase
                 VaultLockState.unlock()
+                android.util.Log.d("VaultRepository", "Vault unlocked successfully.")
                 Result.success(Unit)
+            } catch (e: android.database.sqlite.SQLiteException) {
+                databaseHolder.closeDatabase()
+                // SQLite error code 26 = SQLITE_NOTADB — the existing file is not an SQLCipher
+                // database (e.g. a stale plain-SQLite file from before encryption was enabled).
+                // Wipe the incompatible file + saved salt and surface a clear error so the UI
+                // can tell the user their vault has been reset.
+                if (e.message?.contains("(code 26)") == true || e.message?.contains("file is not a database") == true) {
+                    android.util.Log.w("VaultRepository", "Incompatible DB detected (code 26) — wiping and resetting vault.")
+                    if (dbFile.exists()) dbFile.delete()
+                    settingsDataStore.clearAll()
+                    return@withContext Result.failure(
+                        IllegalStateException("VAULT_RESET: An incompatible database file was detected and has been removed. Please re-enter your password to create a fresh vault.")
+                    )
+                }
+                android.util.Log.e("VaultRepository", "Unlock failed: ${e.message}")
+                Result.failure(e)
             } catch (e: Exception) {
-                // Decryption failure or DB initialization error
+                android.util.Log.e("VaultRepository", "Unlock failed: ${e.message}")
                 databaseHolder.closeDatabase()
                 Result.failure(e)
             } finally {
@@ -142,12 +168,51 @@ class VaultRepositoryImpl @Inject constructor(
                 derivedKey.fill(0)
             }
         } catch (e: Exception) {
+            android.util.Log.e("VaultRepository", "Unlock error: ${e.message}")
             Result.failure(e)
+        } finally {
+            password.fill('\u0000')
         }
     }
 
     override suspend fun changePassword(oldPassword: CharArray, newPassword: CharArray): Result<Unit> = withContext(ioDispatcher) {
-        Result.success(Unit)
+        var newKey: ByteArray? = null
+        try {
+            if (isLocked().value) {
+                return@withContext Result.failure(IllegalStateException("Vault is locked"))
+            }
+
+            // Generate fresh 16-byte random salt
+            val newSalt = ByteArray(16).apply { SecureRandom().nextBytes(this) }
+            
+            // Derive new key
+            newKey = KeyDerivation.deriveKey(newPassword, newSalt)
+            
+            // Format new key as hex string for SQLCipher PRAGMA rekey
+            val newKeyHex = newKey.joinToString("") { "%02x".format(it) }
+            
+            // Rekey database
+            val db = databaseHolder.getDatabase()
+            db.openHelper.writableDatabase.execSQL("PRAGMA rekey = \"x'$newKeyHex'\"")
+            
+            // Save new salt
+            settingsDataStore.saveSalt(newSalt)
+            
+            // Close old database connection and re-open with new key
+            databaseHolder.closeDatabase()
+            databaseHolder.openDatabase(newKey)
+            
+            // Access writableDatabase once to verify the key works
+            databaseHolder.getDatabase().openHelper.writableDatabase
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            newKey?.fill(0)
+            oldPassword.fill('\u0000')
+            newPassword.fill('\u0000')
+        }
     }
 
     override fun isLocked(): StateFlow<Boolean> = VaultLockState.isLocked
@@ -215,6 +280,8 @@ class VaultRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Result.failure(e)
+        } finally {
+            password.fill('\u0000')
         }
     }
 
@@ -283,7 +350,24 @@ class VaultRepositoryImpl @Inject constructor(
             // Wiping decrypted bytes & backup passwords in memory
             decryptedBytes?.fill(0)
             backupContent?.entries?.forEach { it.password.fill(0) }
+            password.fill('\u0000')
         }
+    }
+
+    override suspend fun updateEntryAccess(entryId: Long) = withContext(ioDispatcher) {
+        try {
+            val db = databaseHolder.getDatabase()
+            val entryFlow = db.entryDao().getEntryById(entryId)
+            val entryEntity = entryFlow.first()
+            if (entryEntity != null) {
+                db.entryDao().updateEntry(
+                    entryEntity.copy(lastAccessedAt = System.currentTimeMillis())
+                )
+            }
+        } catch (e: Exception) {
+            // Suppress error
+        }
+        Unit
     }
 
     // Mapper helper extensions

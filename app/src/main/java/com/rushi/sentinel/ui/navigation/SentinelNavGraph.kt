@@ -21,8 +21,11 @@ import com.rushi.sentinel.ui.categories.CategoriesViewModel
 import com.rushi.sentinel.ui.generator.GeneratorScreen
 import com.rushi.sentinel.ui.generator.GeneratorViewModel
 import com.rushi.sentinel.ui.settings.SettingsScreen
+import com.rushi.sentinel.ui.settings.SettingsViewModel
 import com.rushi.sentinel.ui.settings.BackupRestoreScreen
 import com.rushi.sentinel.ui.settings.BackupRestoreViewModel
+import com.rushi.sentinel.ui.settings.ChangePasswordScreen
+import com.rushi.sentinel.ui.settings.ChangePasswordViewModel
 
 sealed class MainScreen {
     object VaultList : MainScreen()
@@ -30,6 +33,7 @@ sealed class MainScreen {
     object PasswordGenerator : MainScreen()
     object Settings : MainScreen()
     object BackupRestore : MainScreen()
+    object ChangePassword : MainScreen()
     data class EntryDetail(val entryId: Long) : MainScreen()
     data class AddEditEntry(val entryId: Long?) : MainScreen()
 }
@@ -59,6 +63,8 @@ fun SentinelNavGraph(
         val categoriesViewModel: CategoriesViewModel = hiltViewModel()
         val generatorViewModel: GeneratorViewModel = hiltViewModel()
         val backupRestoreViewModel: BackupRestoreViewModel = hiltViewModel()
+        val changePasswordViewModel: ChangePasswordViewModel = hiltViewModel()
+        val settingsViewModel: SettingsViewModel = hiltViewModel()
 
         when (val screen = currentScreen) {
             is MainScreen.VaultList -> {
@@ -84,11 +90,15 @@ fun SentinelNavGraph(
             }
             is MainScreen.Settings -> {
                 SettingsScreen(
+                    viewModel = settingsViewModel,
                     onBack = {
                         currentScreen = MainScreen.VaultList
                     },
                     onBackupRestoreClick = {
                         currentScreen = MainScreen.BackupRestore
+                    },
+                    onChangePasswordClick = {
+                        currentScreen = MainScreen.ChangePassword
                     },
                     onLockClick = onLockVault
                 )
@@ -96,6 +106,14 @@ fun SentinelNavGraph(
             is MainScreen.BackupRestore -> {
                 BackupRestoreScreen(
                     viewModel = backupRestoreViewModel,
+                    onBack = {
+                        currentScreen = MainScreen.Settings
+                    }
+                )
+            }
+            is MainScreen.ChangePassword -> {
+                ChangePasswordScreen(
+                    viewModel = changePasswordViewModel,
                     onBack = {
                         currentScreen = MainScreen.Settings
                     }

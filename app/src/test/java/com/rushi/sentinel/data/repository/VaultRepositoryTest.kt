@@ -45,6 +45,7 @@ class VaultRepositoryTest {
         repository = VaultRepositoryImpl(databaseHolder, settingsDataStore)
 
         whenever(databaseHolder.getDatabase()).thenReturn(sentinelDatabase)
+        whenever(databaseHolder.getDatabaseFile()).thenReturn(java.io.File("dummy.db"))
         whenever(sentinelDatabase.openHelper).thenReturn(openHelper)
         whenever(openHelper.writableDatabase).thenReturn(sqLiteDatabase)
         whenever(sentinelDatabase.categoryDao()).thenReturn(categoryDao)
@@ -142,5 +143,24 @@ class VaultRepositoryTest {
         verify(sentinelDatabase).clearAllTables()
         verify(categoryDao).insertCategory(any())
         verify(entryDao).insertEntry(any())
+    }
+
+    @Test
+    fun testChangePassword_success() = runTest {
+        // Unlock first
+        VaultLockState.unlock()
+
+        val oldPassword = "OldPassword".toCharArray()
+        val newPassword = "NewPassword".toCharArray()
+
+        // Act
+        val result = repository.changePassword(oldPassword, newPassword)
+
+        // Assert
+        assertTrue(result.isSuccess)
+        verify(sqLiteDatabase).execSQL(org.mockito.kotlin.argThat { this.startsWith("PRAGMA rekey = ") })
+        verify(settingsDataStore).saveSalt(any())
+        verify(databaseHolder).closeDatabase()
+        verify(databaseHolder).openDatabase(any())
     }
 }

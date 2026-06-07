@@ -7,18 +7,21 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
@@ -27,24 +30,28 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,22 +60,31 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.rushi.sentinel.ui.theme.AccentCyan
 import com.rushi.sentinel.ui.theme.DeepBackground
 import com.rushi.sentinel.ui.theme.PrimaryTeal
 import com.rushi.sentinel.ui.theme.SlateSurface
 import com.rushi.sentinel.ui.theme.TextPrimary
 import com.rushi.sentinel.ui.theme.TextSecondary
+import kotlinx.coroutines.launch
 
 @Composable
 fun LockScreen(
     viewModel: LockViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     val isSetupMode by viewModel.isSetupMode.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
     val lockoutTimeRemaining by viewModel.lockoutTimeRemaining.collectAsState()
+    val biometricEnabled by viewModel.biometricEnabled.collectAsState()
+    val vaultResetEvent by viewModel.vaultResetEvent.collectAsState()
 
     var passwordText by remember { mutableStateOf("") }
     var confirmPasswordText by remember { mutableStateOf("") }
@@ -77,10 +93,76 @@ fun LockScreen(
 
     val isLockoutActive = lockoutTimeRemaining > 0
 
+    // Trigger biometric prompt reusable flow
+    val triggerBiometric = {
+        scope.launch {
+            val cipher = viewModel.getBiometricDecryptionCipher()
+            if (cipher != null) {
+                val activity = context as FragmentActivity
+                val executor = ContextCompat.getMainExecutor(context)
+                val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        val authenticatedCipher = result.cryptoObject?.cipher
+                        if (authenticatedCipher != null) {
+                            viewModel.unlockWithBiometricCipher(authenticatedCipher)
+                        }
+                    }
+
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        // Suppress negative button / click away logs
+                    }
+                })
+                val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Unlock Sentinel")
+                    .setSubtitle("Confirm fingerprint or face to decrypt vault")
+                    .setNegativeButtonText("Use Password")
+                    .build()
+                biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
+            }
+        }
+    }
+
+    // Auto-trigger biometric prompt on launch if enabled
+    LaunchedEffect(biometricEnabled, isSetupMode, isLockoutActive) {
+        if (biometricEnabled && !isSetupMode && !isLockoutActive) {
+            triggerBiometric()
+        }
+    }
+
     // Reset password fields if setup mode switches
     LaunchedEffect(isSetupMode) {
         passwordText = ""
         confirmPasswordText = ""
+    }
+
+    // Vault-reset dialog: shown when a stale/incompatible plain-SQLite DB was detected and wiped.
+    if (vaultResetEvent) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearVaultResetEvent() },
+            title = {
+                Text(
+                    text = "Vault Reset",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "An incompatible database file was detected from a previous installation " +
+                           "(before encryption was enabled). It has been automatically removed.\n\n" +
+                           "Please set a new master password to initialize a fresh encrypted vault.",
+                    color = TextSecondary,
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearVaultResetEvent() }) {
+                    Text("OK", color = AccentCyan, fontWeight = FontWeight.Bold)
+                }
+            },
+            backgroundColor = SlateSurface,
+            contentColor = TextPrimary
+        )
     }
 
     Box(
@@ -282,42 +364,65 @@ fun LockScreen(
                     )
                 }
 
-                // Submit Button
-                Button(
-                    onClick = {
-                        if (isSetupMode) {
-                            submitSetup(passwordText, confirmPasswordText, viewModel)
-                            passwordText = ""
-                            confirmPasswordText = ""
-                        } else {
-                            submitUnlock(passwordText, viewModel)
-                            passwordText = ""
-                        }
-                    },
-                    enabled = !loading && !isLockoutActive && passwordText.isNotEmpty() && (!isSetupMode || confirmPasswordText.isNotEmpty()),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = PrimaryTeal,
-                        contentColor = DeepBackground,
-                        disabledBackgroundColor = PrimaryTeal.copy(alpha = 0.3f),
-                        disabledContentColor = TextSecondary.copy(alpha = 0.5f)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
+                // Submit Button / Biometric Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (loading) {
-                        CircularProgressIndicator(
-                            color = DeepBackground,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = if (isSetupMode) "Initialize Vault" else "Decrypt Vault",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
+                    Button(
+                        onClick = {
+                            if (isSetupMode) {
+                                submitSetup(passwordText, confirmPasswordText, viewModel)
+                                passwordText = ""
+                                confirmPasswordText = ""
+                            } else {
+                                submitUnlock(passwordText, viewModel)
+                                passwordText = ""
+                            }
+                        },
+                        enabled = !loading && !isLockoutActive && passwordText.isNotEmpty() && (!isSetupMode || confirmPasswordText.isNotEmpty()),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = PrimaryTeal,
+                            contentColor = DeepBackground,
+                            disabledBackgroundColor = PrimaryTeal.copy(alpha = 0.3f),
+                            disabledContentColor = TextSecondary.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
+                        if (loading) {
+                            CircularProgressIndicator(
+                                color = DeepBackground,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Text(
+                                text = if (isSetupMode) "Initialize Vault" else "Decrypt Vault",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                    }
+
+                    if (biometricEnabled && !isSetupMode && !isLockoutActive) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        IconButton(
+                            onClick = { triggerBiometric() },
+                            modifier = Modifier
+                                .size(50.dp)
+                                .background(PrimaryTeal.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                                .border(1.dp, PrimaryTeal, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = "Biometric Unlock",
+                                tint = AccentCyan,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -325,23 +430,14 @@ fun LockScreen(
     }
 }
 
-// Memory-safe submission handlers converting String to CharArray and zeroing immediately after use
+// Memory-safe submission handlers converting String to CharArray. ViewModels own zeroing.
 private fun submitUnlock(password: String, viewModel: LockViewModel) {
-    val charArray = password.toCharArray()
-    try {
-        viewModel.unlock(charArray)
-    } finally {
-        charArray.fill('0')
-    }
+    val chars = password.toCharArray()
+    viewModel.unlock(chars)
 }
 
 private fun submitSetup(password: String, confirm: String, viewModel: LockViewModel) {
-    val passArray = password.toCharArray()
-    val confirmArray = confirm.toCharArray()
-    try {
-        viewModel.setupVault(passArray, confirmArray)
-    } finally {
-        passArray.fill('0')
-        confirmArray.fill('0')
-    }
+    val pwdChars = password.toCharArray()
+    val confirmChars = confirm.toCharArray()
+    viewModel.setupVault(pwdChars, confirmChars)
 }

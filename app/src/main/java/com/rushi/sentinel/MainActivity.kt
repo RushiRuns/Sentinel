@@ -7,9 +7,14 @@ import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -22,7 +27,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var vaultRepository: VaultRepository
@@ -49,11 +54,18 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             SentinelTheme {
-                SentinelNavGraph(
-                    lockViewModel = lockViewModel,
-                    onCopyPassword = ::copyToClipboard,
-                    onLockVault = { vaultRepository.lock() }
-                )
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding(),
+                    color = MaterialTheme.colors.background
+                ) {
+                    SentinelNavGraph(
+                        lockViewModel = lockViewModel,
+                        onCopyPassword = ::copyToClipboard,
+                        onLockVault = { vaultRepository.lock() }
+                    )
+                }
             }
         }
     }

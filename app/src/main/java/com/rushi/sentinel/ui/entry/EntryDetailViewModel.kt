@@ -46,6 +46,10 @@ class EntryDetailViewModel @Inject constructor(
         _entryId.value = id
         _isPasswordMasked.value = true
         maskJob?.cancel()
+        
+        viewModelScope.launch {
+            vaultRepository.updateEntryAccess(id)
+        }
     }
 
     fun togglePasswordMask() {

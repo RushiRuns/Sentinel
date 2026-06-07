@@ -71,6 +71,7 @@ fun VaultListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
 
     Scaffold(
         topBar = {
@@ -171,8 +172,22 @@ fun VaultListScreen(
                 // "All" Chip
                 CategoryFilterChip(
                     name = "All",
-                    isSelected = selectedCategoryId == null,
-                    onClick = { viewModel.selectCategory(null) }
+                    isSelected = selectedFilter == VaultFilter.ALL && selectedCategoryId == null,
+                    onClick = { viewModel.selectFilter(VaultFilter.ALL) }
+                )
+
+                // "Favorites" Chip
+                CategoryFilterChip(
+                    name = "⭐ Favorites",
+                    isSelected = selectedFilter == VaultFilter.FAVORITES,
+                    onClick = { viewModel.selectFilter(VaultFilter.FAVORITES) }
+                )
+
+                // "Recent" Chip
+                CategoryFilterChip(
+                    name = "🕒 Recent",
+                    isSelected = selectedFilter == VaultFilter.RECENT,
+                    onClick = { viewModel.selectFilter(VaultFilter.RECENT) }
                 )
 
                 // Dynamic Categories Chips
@@ -204,15 +219,25 @@ fun VaultListScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        val emptyStateIcon = when (selectedFilter) {
+                            VaultFilter.FAVORITES -> Icons.Default.Star
+                            else -> Icons.Default.Search
+                        }
+                        val emptyStateText = when {
+                            searchQuery.isNotEmpty() -> "No matching entries found"
+                            selectedFilter == VaultFilter.FAVORITES -> "No Favorites yet"
+                            selectedFilter == VaultFilter.RECENT -> "No Recent items"
+                            else -> "Your Vault is Empty"
+                        }
                         Icon(
-                            imageVector = Icons.Default.Search,
+                            imageVector = emptyStateIcon,
                             contentDescription = "No Entries Icon",
                             tint = TextSecondary.copy(alpha = 0.3f),
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (searchQuery.isEmpty()) "Your Vault is Empty" else "No matching entries found",
+                            text = emptyStateText,
                             color = TextSecondary,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
@@ -234,6 +259,7 @@ fun VaultListScreen(
                             onCopyClick = {
                                 val pwd = String(entry.password)
                                 onCopyPassword(pwd)
+                                viewModel.recordEntryAccess(entry.id)
                             }
                         )
                     }

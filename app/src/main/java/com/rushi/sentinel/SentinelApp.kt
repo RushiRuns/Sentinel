@@ -7,7 +7,6 @@ import dagger.hilt.android.HiltAndroidApp
 class SentinelApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Load SQLCipher native libraries
         System.loadLibrary("sqlcipher")
     }
 }

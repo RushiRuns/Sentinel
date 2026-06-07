@@ -28,4 +28,7 @@ interface VaultRepository {
     // Backup & Restore
     suspend fun exportBackup(password: CharArray): Result<ByteArray>
     suspend fun importBackup(backupData: ByteArray, password: CharArray): Result<Unit>
+
+    // Access tracking
+    suspend fun updateEntryAccess(entryId: Long)
 }
