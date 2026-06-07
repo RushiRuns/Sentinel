@@ -5,6 +5,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.platform.app.InstrumentationRegistry
+import com.rushi.sentinel.crypto.BiometricKeyManager
 import com.rushi.sentinel.data.datastore.SettingsDataStore
 import com.rushi.sentinel.data.repository.VaultRepository
 import com.rushi.sentinel.domain.model.Category
@@ -37,7 +38,7 @@ class LockScreenTest {
             settingsDataStore.clearAll()
         }
         fakeRepository = FakeVaultRepository()
-        viewModel = LockViewModel(fakeRepository, settingsDataStore)
+        viewModel = LockViewModel(fakeRepository, settingsDataStore, BiometricKeyManager())
     }
 
     @Test
