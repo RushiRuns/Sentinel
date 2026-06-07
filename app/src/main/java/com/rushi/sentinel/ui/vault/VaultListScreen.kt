@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -62,6 +63,7 @@ fun VaultListScreen(
     onAddEntryClick: () -> Unit,
     onManageCategoriesClick: () -> Unit,
     onGeneratorClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onCopyPassword: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -88,6 +90,13 @@ fun VaultListScreen(
                         Icon(
                             imageVector = Icons.Default.Autorenew,
                             contentDescription = "Password Generator",
+                            tint = AccentCyan
+                        )
+                    }
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
                             tint = AccentCyan
                         )
                     }

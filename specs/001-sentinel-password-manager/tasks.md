@@ -127,13 +127,13 @@ description: "Task list for Sentinel - Local Password Manager implementation"
 
 ### Tests for User Story 5 (MANDATORY) ⚠️
 
-- [ ] T032 [P] [US5] Unit test for BackupCrypto encrypt/decrypt roundtrip in app/src/test/java/com/rushi/sentinel/crypto/
+- [x] T032 [P] [US5] Unit test for BackupCrypto encrypt/decrypt roundtrip in app/src/test/java/com/rushi/sentinel/crypto/
 
 ### Implementation for User Story 5
 
-- [ ] T033 [P] [US5] Implement BackupCrypto.kt with AES-GCM logic
-- [ ] T034 [US5] Implement Export flow with SAF CreateDocument in app/src/main/java/com/rushi/sentinel/ui/settings/
-- [ ] T035 [US5] Implement Import flow with SAF OpenDocument and password verification
+- [x] T033 [P] [US5] Implement BackupCrypto.kt with AES-GCM logic
+- [x] T034 [US5] Implement Export flow with SAF CreateDocument in app/src/main/java/com/rushi/sentinel/ui/settings/
+- [x] T035 [US5] Implement Import flow with SAF OpenDocument and password verification
 
 ---
 

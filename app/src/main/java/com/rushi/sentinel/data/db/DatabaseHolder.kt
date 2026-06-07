@@ -11,6 +11,7 @@ class DatabaseHolder @Inject constructor(
     private val context: Context
 ) {
     private var database: SentinelDatabase? = null
+    private var passphrase: ByteArray? = null
 
     /**
      * Retrieves the active database instance.
@@ -27,7 +28,11 @@ class DatabaseHolder @Inject constructor(
     @Synchronized
     fun openDatabase(passphrase: ByteArray) {
         if (database == null) {
-            val factory = SupportOpenHelperFactory(passphrase)
+            // Clone the passphrase to prevent external modification (e.g. zeroing)
+            // affecting the database factory.
+            val passphraseClone = passphrase.clone()
+            this.passphrase = passphraseClone
+            val factory = SupportOpenHelperFactory(passphraseClone)
             database = Room.databaseBuilder(
                 context.applicationContext,
                 SentinelDatabase::class.java,
@@ -46,6 +51,9 @@ class DatabaseHolder @Inject constructor(
     fun closeDatabase() {
         database?.close()
         database = null
+        // Wipe the cloned passphrase from memory
+        passphrase?.fill(0)
+        passphrase = null
     }
 
     /**

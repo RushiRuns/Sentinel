@@ -51,7 +51,8 @@ class MainActivity : ComponentActivity() {
             SentinelTheme {
                 SentinelNavGraph(
                     lockViewModel = lockViewModel,
-                    onCopyPassword = ::copyToClipboard
+                    onCopyPassword = ::copyToClipboard,
+                    onLockVault = { vaultRepository.lock() }
                 )
             }
         }

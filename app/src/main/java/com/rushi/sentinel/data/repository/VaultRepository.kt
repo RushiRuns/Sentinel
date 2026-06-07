@@ -24,4 +24,8 @@ interface VaultRepository {
     suspend fun changePassword(oldPassword: CharArray, newPassword: CharArray): Result<Unit>
     fun isLocked(): StateFlow<Boolean>
     fun lock()
+
+    // Backup & Restore
+    suspend fun exportBackup(password: CharArray): Result<ByteArray>
+    suspend fun importBackup(backupData: ByteArray, password: CharArray): Result<Unit>
 }

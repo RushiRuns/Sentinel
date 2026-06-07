@@ -5,9 +5,14 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.rushi.sentinel.data.datastore.SettingsDataStore
 import com.rushi.sentinel.data.db.DatabaseHolder
 import com.rushi.sentinel.data.db.SentinelDatabase
+import com.rushi.sentinel.data.db.dao.CategoryDao
+import com.rushi.sentinel.data.db.dao.EntryDao
+import com.rushi.sentinel.data.db.entity.CategoryEntity
+import com.rushi.sentinel.data.db.entity.EntryEntity
 import com.rushi.sentinel.ui.navigation.VaultLockState
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -18,7 +23,10 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.security.SecureRandom
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class VaultRepositoryTest {
 
     private val databaseHolder: DatabaseHolder = mock()
@@ -28,6 +36,8 @@ class VaultRepositoryTest {
     private val sentinelDatabase: SentinelDatabase = mock()
     private val openHelper: SupportSQLiteOpenHelper = mock()
     private val sqLiteDatabase: SupportSQLiteDatabase = mock()
+    private val categoryDao: CategoryDao = mock()
+    private val entryDao: EntryDao = mock()
 
     @Before
     fun setUp() {
@@ -37,6 +47,8 @@ class VaultRepositoryTest {
         whenever(databaseHolder.getDatabase()).thenReturn(sentinelDatabase)
         whenever(sentinelDatabase.openHelper).thenReturn(openHelper)
         whenever(openHelper.writableDatabase).thenReturn(sqLiteDatabase)
+        whenever(sentinelDatabase.categoryDao()).thenReturn(categoryDao)
+        whenever(sentinelDatabase.entryDao()).thenReturn(entryDao)
     }
 
     @Test
@@ -80,5 +92,55 @@ class VaultRepositoryTest {
         assertTrue(result.isFailure)
         assertTrue(repository.isLocked().value)
         verify(databaseHolder).closeDatabase()
+    }
+
+    @Test
+    fun testBackupExportAndImport_success() = runTest {
+        // Unlock repository
+        VaultLockState.unlock()
+
+        // Mock data
+        val categories = listOf(CategoryEntity(1L, "Work", 1000L))
+        val entries = listOf(
+            EntryEntity(
+                id = 1L,
+                name = "Google",
+                username = "rushi",
+                password = "MyPassword".toByteArray(Charsets.UTF_8),
+                url = "https://google.com",
+                notes = "My notes",
+                categoryId = 1L,
+                isFavorite = true,
+                createdAt = 1000L,
+                updatedAt = 1000L,
+                lastAccessedAt = 1000L
+            )
+        )
+
+        whenever(categoryDao.getCategories()).thenReturn(flowOf(categories))
+        whenever(entryDao.getEntries()).thenReturn(flowOf(entries))
+
+        val password = "BackupPassword123!".toCharArray()
+
+        // Act: Export
+        val exportResult = repository.exportBackup(password.clone())
+        assertTrue(exportResult.isSuccess)
+        val backupBytes = exportResult.getOrThrow()
+
+        // Mock transaction and insertion for Import
+        whenever(sentinelDatabase.runInTransaction(any())).thenAnswer { invocation ->
+            val runnable = invocation.getArgument<Runnable>(0)
+            runnable.run()
+            null
+        }
+
+        // Act: Import
+        val importResult = repository.importBackup(backupBytes, password)
+        assertTrue(importResult.isSuccess)
+
+        // Assert
+        verify(sentinelDatabase).clearAllTables()
+        verify(categoryDao).insertCategory(any())
+        verify(entryDao).insertEntry(any())
     }
 }
