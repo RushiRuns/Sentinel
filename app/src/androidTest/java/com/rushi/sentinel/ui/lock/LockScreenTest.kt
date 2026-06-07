@@ -65,9 +65,11 @@ class LockScreenTest {
     }
 
     @Test
-    fun testUnlockMode_displaysUnlockFieldsAndFails() = runBlocking {
+    fun testUnlockMode_displaysUnlockFieldsAndFails() {
         // Set an existing salt to trigger unlock mode
-        settingsDataStore.saveSalt(ByteArray(16))
+        runBlocking {
+            settingsDataStore.saveSalt(ByteArray(16))
+        }
 
         composeTestRule.setContent {
             SentinelTheme {
@@ -118,6 +120,14 @@ class LockScreenTest {
             oldPassword: CharArray,
             newPassword: CharArray
         ): Result<Unit> = Result.success(Unit)
+
+        override suspend fun exportBackup(password: CharArray): Result<ByteArray> =
+            Result.success(ByteArray(0))
+
+        override suspend fun importBackup(backupData: ByteArray, password: CharArray): Result<Unit> =
+            Result.success(Unit)
+
+        override suspend fun updateEntryAccess(entryId: Long) {}
 
         override fun isLocked(): StateFlow<Boolean> = _isLocked.asStateFlow()
 
