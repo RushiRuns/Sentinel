@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sentinel hexagon logo — cyan variant for LockScreen / dark backgrounds.
+
+    Structure (inside → outside):
+      1. Outer thick hexagon ring  (solid #00E5FF, evenOdd cutout creates the ring)
+      2. Dark gap ring              (transparent — deep background shows through)
+      3. Inner hexagon box         (solid #00E5FF)
+      4. White vertical centre line (splits inner box left / right)
+      5. White diamond              (centred on the vertical line)
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!--
+        Outer ring.
+        Outer hex  R=45  → M50,5  L89,27.5 L89,72.5 L50,95  L11,72.5 L11,27.5 Z
+        Gap cutout R=38  → M50,12 L83,31   L83,69   L50,88  L17,69   L17,31   Z
+        evenOdd fill paints only the ring between the two sub-paths.
+    -->
+    <path
+        android:fillColor="#00E5FF"
+        android:fillType="evenOdd"
+        android:pathData="
+            M50,5  L89,27 L89,73 L50,95 L11,73 L11,27 Z
+            M50,12 L83,31 L83,69 L50,88 L17,69 L17,31 Z" />
+
+    <!--
+        Inner hexagon box (sits inside the gap).
+        Inner hex R=32  → M50,18 L77,34 L77,66 L50,82 L23,66 L23,34 Z
+    -->
+    <path
+        android:fillColor="#00E5FF"
+        android:fillAlpha="0.9"
+        android:pathData="M50,18 L77,34 L77,66 L50,82 L23,66 L23,34 Z" />
+
+    <!--
+        White vertical centre line — divides the inner box left / right.
+    -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M50,18 L50,82" />
+
+    <!--
+        White diamond / lens centred at (50,50).
+        Half-size = 7 units each axis.
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,43 L57,50 L50,57 L43,50 Z" />
+
+</vector>

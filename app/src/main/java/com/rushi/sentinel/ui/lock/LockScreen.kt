@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.rushi.sentinel.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,10 +35,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -187,22 +187,12 @@ fun LockScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Glowing Lock Icon
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryTeal.copy(alpha = 0.1f))
-                    .border(2.dp, PrimaryTeal, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isSetupMode) Icons.Default.VpnKey else Icons.Default.Lock,
-                    contentDescription = "Lock State Icon",
-                    tint = AccentCyan,
-                    modifier = Modifier.size(36.dp)
-                )
-            }
+            // Sentinel hexagon logo
+            Image(
+                painter = painterResource(id = R.drawable.ic_sentinel_logo),
+                contentDescription = "Sentinel Logo",
+                modifier = Modifier.size(104.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 

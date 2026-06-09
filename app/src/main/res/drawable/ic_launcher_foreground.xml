@@ -1,39 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sentinel hexagon logo — white variant for the adaptive launcher icon.
+    Background is solid black (ic_launcher_background.xml).
+
+    Structure (identical shape to ic_sentinel_logo.xml, colours inverted):
+      1. Outer thick hexagon ring  (white, evenOdd cutout)
+      2. Dark gap ring              (transparent → black background shows through)
+      3. Inner hexagon box         (white)
+      4. Black vertical centre line (visible on white fill)
+      5. Black diamond              (visible on white fill)
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="100"
+    android:viewportHeight="100">
 
-    <!-- Shield body -->
+    <!-- Outer ring (white) -->
     <path
         android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
         android:pathData="
-          M54,14
-          C54,14 22,26 22,50
-          C22,68 36,82 54,94
-          C72,82 86,68 86,50
-          C86,26 54,14 54,14
-          Z" />
+            M50,5  L89,27 L89,73 L50,95 L11,73 L11,27 Z
+            M50,12 L83,31 L83,69 L50,88 L17,69 L17,31 Z" />
 
-    <!-- Keyhole circle (black) -->
+    <!-- Inner box (white) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,18 L77,34 L77,66 L50,82 L23,66 L23,34 Z" />
+
+    <!-- Vertical centre line (black — cuts through white fill) -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M50,18 L50,82" />
+
+    <!-- Diamond (black — on white fill) -->
     <path
         android:fillColor="#000000"
-        android:pathData="
-          M54,42
-          m-7,0
-          a7,7 0 1,0 14,0
-          a7,7 0 1,0 -14,0
-          Z" />
-
-    <!-- Keyhole stem (black) -->
-    <path
-        android:fillColor="#000000"
-        android:pathData="
-          M50,49
-          L50,64
-          L58,64
-          L58,49
-          Z" />
+        android:pathData="M50,43 L57,50 L50,57 L43,50 Z" />
 
 </vector>
